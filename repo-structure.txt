@@ -1,0 +1,13 @@
+.
+├── app.py
+├── consumer.py
+├── db.py
+├── requirements.txt
+├── schema.sql
+├── .gitignore
+├── .env.example
+├── templates
+│   ├── layout.html
+│   ├── index.html
+│   └── manage.html
+└── README.md
