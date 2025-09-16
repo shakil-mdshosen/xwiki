@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>xwiki</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <script>
+    // flash auto-hide
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.flash').forEach(el => el.remove());
+      }, 4000);
+    });
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <header class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-xl font-semibold">xwiki</span>
+        <span class="text-sm text-gray-500">Cross-wiki user activity</span>
+      </div>
+      <nav class="flex items-center gap-4">
+        <a href="{{ url_for('index') }}" class="text-sm text-gray-700 hover:text-black">Dashboard</a>
+        {% if user %}
+        <a href="{{ url_for('manage_tracked_users') }}" class="text-sm text-gray-700 hover:text-black">Manage tracked users</a>
+        <span class="text-sm text-gray-500">Signed in as <strong>{{ user.username }}</strong></span>
+        <a href="{{ url_for('logout') }}" class="text-sm text-blue-600 hover:underline">Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}" class="text-sm text-blue-600 hover:underline">Login</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="space-y-2 mb-4">
+          {% for category, msg in messages %}
+          <div class="flash p-3 rounded border
+            {% if category == 'success' %} bg-green-50 border-green-200 text-green-900
+            {% elif category == 'error' %} bg-red-50 border-red-200 text-red-900
+            {% else %} bg-gray-50 border-gray-200 text-gray-900
+            {% endif %}">
+            {{ msg }}
+          </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-4 py-6 text-xs text-gray-500">
+    Built for Toolforge • Uses Wikimedia EventStreams • OAuth2 login on Meta-Wiki
+  </footer>
+</body>
+</html>

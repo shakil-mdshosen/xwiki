@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="bg-white rounded-lg border p-4 mb-6">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-3">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Tracked user</label>
+      <select name="user" class="w-full border rounded px-2 py-1">
+        <option value="">All</option>
+        {% for u in tracked_users %}
+          <option value="{{ u }}" {% if selected_user==u %}selected{% endif %}>{{ u }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Wiki</label>
+      <select name="wiki" class="w-full border rounded px-2 py-1">
+        <option value="">All</option>
+        {% for w in wikis %}
+          <option value="{{ w }}" {% if wiki==w %}selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Type</label>
+      <select name="type" class="w-full border rounded px-2 py-1">
+        <option value="">All</option>
+        {% for t in types %}
+          <option value="{{ t }}" {% if ev_type==t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">From (UTC)</label>
+      <input type="datetime-local" name="from" value="{{ date_from }}" class="w-full border rounded px-2 py-1"/>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">To (UTC)</label>
+      <input type="datetime-local" name="to" value="{{ date_to }}" class="w-full border rounded px-2 py-1"/>
+    </div>
+    <div class="flex items-end">
+      <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Apply</button>
+    </div>
+  </form>
+</div>
+
+<div class="bg-white rounded-lg border">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div>
+      <div class="text-sm text-gray-600">Results</div>
+      <div class="text-xs text-gray-500">Total: {{ total }}, page {{ page }}</div>
+    </div>
+    <div class="flex items-center gap-2">
+      {% if page > 1 %}
+      <a href="{{ page_url(page-1) }}" class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Prev</a>
+      {% endif %}
+      {% if page * page_size < total %}
+      <a href="{{ page_url(page+1) }}" class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Next</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left">Time (UTC)</th>
+          <th class="px-3 py-2 text-left">Wiki</th>
+          <th class="px-3 py-2 text-left">User</th>
+          <th class="px-3 py-2 text-left">Type</th>
+          <th class="px-3 py-2 text-left">Title</th>
+          <th class="px-3 py-2 text-left">Comment</th>
+          <th class="px-3 py-2 text-left">Links</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for r in rows %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 whitespace-nowrap">{{ r.timestamp.strftime("%Y-%m-%d %H:%M:%S") if r.timestamp else "" }}</td>
+          <td class="px-3 py-2"><code class="text-xs">{{ r.wiki }}</code></td>
+          <td class="px-3 py-2">{{ r.user }}</td>
+          <td class="px-3 py-2">
+            {{ r.type }}
+            {% if r.log_type %}<span class="text-gray-500">({{ r.log_type }}:{{ r.log_action }})</span>{% endif %}
+            {% if r.minor %}<span class="ml-1 text-xs bg-gray-100 px-1 rounded border">minor</span>{% endif %}
+            {% if r.bot %}<span class="ml-1 text-xs bg-gray-100 px-1 rounded border">bot</span>{% endif %}
+            {% if r.patrolled %}<span class="ml-1 text-xs bg-green-100 px-1 rounded border border-green-300">patrolled</span>{% endif %}
+          </td>
+          <td class="px-3 py-2">{{ r.title }}</td>
+          <td class="px-3 py-2">{{ r.comment or "" }}</td>
+          <td class="px-3 py-2">
+            {% if r.server_url and r.rev_id %}
+              <a class="text-blue-600 hover:underline" target="_blank" rel="noopener"
+                 href="{{ r.server_url }}/wiki/Special:Diff/{{ r.rev_id }}">diff</a>
+            {% elif r.server_url and r.type == 'log' and r.title %}
+              <a class="text-blue-600 hover:underline" target="_blank" rel="noopener"
+                 href="{{ r.server_url }}/wiki/{{ r.title|replace(' ', '_') }}">log</a>
+            {% elif r.server_url and r.title %}
+              <a class="text-blue-600 hover:underline" target="_blank" rel="noopener"
+                 href="{{ r.server_url }}/wiki/{{ r.title|replace(' ', '_') }}">page</a>
+            {% else %}
+              <span class="text-gray-400">n/a</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="p-4 border-t flex items-center justify-between">
+    <div class="text-xs text-gray-500">Showing page {{ page }} of {{ (total // page_size) + (1 if total % page_size else 0) }}</div>
+    <div class="flex items-center gap-2">
+      {% if page > 1 %}
+      <a href="{{ page_url(page-1) }}" class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Prev</a>
+      {% endif %}
+      {% if page * page_size < total %}
+      <a href="{{ page_url(page+1) }}" class="px-3 py-1 border rounded text-sm hover:bg-gray-50">Next</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
